@@ -5,3 +5,7 @@ zacal som pracovat na side bare este mi nefunguje uplne hover
 # Report [2026-03-09]
 
 dokoncil som sidebar aj ked neni velmi pekny
+
+# Report [2026-03-17]
+
+sidebar je krajsi a funkcny ako tak
