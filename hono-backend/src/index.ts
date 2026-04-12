@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import * as z from 'zod'
 import { sValidator } from '@hono/standard-validator'
+import db from './db-register.js'
 
 const app = new Hono()
 app.use(cors())
@@ -54,3 +55,43 @@ serve(
     console.log(`Server is running on http://localhost:${info.port}`)
   },
 )
+
+//register
+const registerSchema = z.object({
+  username: z.string().min(1),
+  email: z.email(),
+  password: z.string().min(6),
+})
+
+app.post('/register', sValidator('json', registerSchema), async (c) => {
+  const body = c.req.valid('json')
+
+  try {
+    db.prepare('INSERT INTO users (email, username, password) VALUES (?, ?, ?)')
+      .run(body.email, body.username, body.password)
+
+    return c.text('ok')
+  } catch (e) {
+    return c.text('email already exists', 409)
+  }
+})
+
+//login
+
+const loginSchema = z.object({
+  email: z.email(),
+  password: z.string().min(6),
+})
+
+app.post('/login', sValidator('json', loginSchema), async (c) => {
+  const body = c.req.valid('json')
+
+  const user = db.prepare('SELECT * FROM users WHERE email = ? AND password = ?')
+    .get(body.email, body.password)
+
+  if (!user) {
+    return c.text('invalid credentials', 401)
+  }
+
+  return c.json(user)
+})

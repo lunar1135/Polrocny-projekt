@@ -1,11 +1,10 @@
 <script setup>
-    import {
-        ref
-    } from 'vue'
+    
     import {
         RouterLink,
         RouterView
     } from 'vue-router'
+    import { ref, onMounted } from 'vue'
 
     const users = ref([])
     const userName = ref('Log in')
@@ -41,6 +40,16 @@
         },
     ]
 
+        onMounted(() => {
+  const stored = localStorage.getItem('user')
+  if (stored) {
+    const user = JSON.parse(stored)
+    userName.value = user.username
+  }
+})
+
+
+/*
     async function fetchUsers() {
         const response = await fetch('http://localhost:3000/users')
         const usersResponse = await response.json()
@@ -79,6 +88,7 @@
             await fetchUsers()
         }
     }
+*/
 </script>
 
 

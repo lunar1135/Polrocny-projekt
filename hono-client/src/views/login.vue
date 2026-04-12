@@ -7,7 +7,7 @@
                 <div class="flex items-center gap-2.5">
                     <img src="/images/logo.png" alt="logo voltix" class="w-9 h-9 rounded-xl bg-acent">
                     <span class="font-bold text-lg text-text tracking-widest">VOLTIX</span>
-                </div>       
+                </div>
             </RouterLink>
         </nav>
 
@@ -51,7 +51,8 @@
                         </a>
                     </div>
 
-                    <button class="w-full h-[46px] bg-acent hover:bg-acent/80 active:scale-[0.98] text-white text-sm font-medium rounded-xl transition-all">
+                    <button @click="login"
+                        class="w-full h-[46px] bg-acent hover:bg-acent/80 active:scale-[0.98] text-white text-sm font-medium rounded-xl transition-all">
                         Prihlásiť sa
                     </button>
 
@@ -88,8 +89,24 @@
     const email = ref('')
     const password = ref('')
 
-    function handleLogin() {
-        // tu príde tvoja auth logika
-        console.log('Login:', email.value, password.value)
+    async function login() {
+        const response = await fetch('http://localhost:3000/login', {
+            method: 'post',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email.value,
+                password: password.value,
+            }),
+        })
+
+        if (response.ok) {
+            const user = await response.json()
+            localStorage.setItem('user', JSON.stringify(user))
+            router.push('/')
+        } else {
+            alert('Nesprávny email alebo heslo')
+        }
     }
 </script>

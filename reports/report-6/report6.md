@@ -2,4 +2,4 @@
 
 opravil som router link na main stranku a login problem bol ze som volal v routerview ten isty file v ktorom som uz mal dalsi kod tak som ho len dal do ineho file
 
-spravil som register stranku a idem este spravit registrovanie spolu s DB 
+spravil som register stranku a aj register a login funkcionalitu na stranke

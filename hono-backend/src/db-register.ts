@@ -11,3 +11,5 @@ db.exec(`
     created_at INTEGER DEFAULT (unixepoch())
   )  
 `)
+
+export default db

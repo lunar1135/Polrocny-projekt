@@ -28,7 +28,7 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-[11px] font-medium text-text/50 uppercase tracking-wide mb-1.5">
-                            Meno
+                            Meno a priezvisko
                         </label>
                         <input v-model="name" type="text" placeholder="Ján Novák"
                             class="w-full h-11 px-3.5 rounded-xl text-sm text-text bg-background
@@ -69,7 +69,7 @@
                           focus:border-acent focus:bg-white placeholder:text-text/25" />
                     </div>
 
-                    <button
+                    <button @click="register"
                         class="w-full h-[46px] bg-acent hover:bg-acent/80 active:scale-[0.98] text-white text-sm font-medium rounded-xl transition-all">
                         Zaregistrovať sa
                     </button>
@@ -91,10 +91,38 @@
     import {
         ref
     } from 'vue'
+    import { useRouter } from 'vue-router'
+
+
+    const router = useRouter()
 
     const name = ref('')
     const email = ref('')
     const password = ref('')
     const passwordConfirm = ref('')
+
+
+    async function register() {
+  if (password.value !== passwordConfirm.value) {
+    alert('Heslá sa nezhodujú')
+    return
+  }
+
+  const response = await fetch('http://localhost:3000/register', {
+    method: 'post',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      username: name.value,
+      email: email.value,
+      password: password.value,
+    }),
+  })
+
+  if (response.ok) {
+    router.push('/login')
+  } else {
+    alert('Tento email už existuje')
+  }
+}
 </script>
 
