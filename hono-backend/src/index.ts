@@ -4,6 +4,7 @@ import { cors } from 'hono/cors'
 import * as z from 'zod'
 import { sValidator } from '@hono/standard-validator'
 import db from './db-register.js'
+import bcrypt from 'bcrypt'
 
 const app = new Hono()
 app.use(cors())
@@ -67,8 +68,9 @@ app.post('/register', sValidator('json', registerSchema), async (c) => {
   const body = c.req.valid('json')
 
   try {
+    const hashedPassword = await bcrypt.hash(body.password, 10)
     db.prepare('INSERT INTO users (email, username, password) VALUES (?, ?, ?)')
-      .run(body.email, body.username, body.password)
+      .run(body.email, body.username, hashedPassword)
 
     return c.text('ok')
   } catch (e) {
@@ -86,12 +88,13 @@ const loginSchema = z.object({
 app.post('/login', sValidator('json', loginSchema), async (c) => {
   const body = c.req.valid('json')
 
-  const user = db.prepare('SELECT * FROM users WHERE email = ? AND password = ?')
-    .get(body.email, body.password)
+  const user = db.prepare('SELECT * FROM users WHERE email = ?')
+    .get(body.email) as any
 
-  if (!user) {
-    return c.text('invalid credentials', 401)
-  }
+  if (!user) return c.text('invalid credentials', 401)
+
+  const match = await bcrypt.compare(body.password, user.password)
+  if (!match) return c.text('invalid credentials', 401)
 
   return c.json(user)
 })

@@ -1,10 +1,12 @@
 <script setup>
-    
     import {
         RouterLink,
         RouterView
     } from 'vue-router'
-    import { ref, onMounted } from 'vue'
+    import {
+        ref,
+        onMounted
+    } from 'vue'
 
     const users = ref([])
     const userName = ref('Log in')
@@ -40,59 +42,68 @@
         },
     ]
 
-        onMounted(() => {
-  const stored = localStorage.getItem('user')
-  if (stored) {
-    const user = JSON.parse(stored)
-    userName.value = user.username
-  }
-})
 
 
-/*
-    async function fetchUsers() {
-        const response = await fetch('http://localhost:3000/users')
-        const usersResponse = await response.json()
 
-        users.value = usersResponse
-    }
-
-    async function deleteUser(index) {
-        const response = await fetch('http://localhost:3000/users/' + index, {
-            method: 'delete',
-        })
-
-        const deleteUserResponse = await response.text()
-
-        if (deleteUserResponse === 'ok') {
-            await fetchUsers()
+    onMounted(() => {
+        const stored = localStorage.getItem('user')
+        if (stored) {
+            userName.value = JSON.parse(stored).username
         }
+    })
+
+    function logout() {
+        localStorage.removeItem('user')
+        userName.value = null
+        dropdownOpen.value = false
     }
 
-    const text = ref('')
 
-    async function addUser() {
-        const response = await fetch('http://localhost:3000/users', {
-            method: 'post',
-            headers: {
-                'content-type': 'application/json',
-            },
-            body: JSON.stringify({
-                newUsername: text.value,
-            }),
-        })
 
-        const responseText = await response.text()
+    /*
+        async function fetchUsers() {
+            const response = await fetch('http://localhost:3000/users')
+            const usersResponse = await response.json()
 
-        if (responseText === 'ok') {
-            await fetchUsers()
+            users.value = usersResponse
         }
-    }
-*/
+
+        async function deleteUser(index) {
+            const response = await fetch('http://localhost:3000/users/' + index, {
+                method: 'delete',
+            })
+
+            const deleteUserResponse = await response.text()
+
+            if (deleteUserResponse === 'ok') {
+                await fetchUsers()
+            }
+        }
+
+        const text = ref('')
+
+        async function addUser() {
+            const response = await fetch('http://localhost:3000/users', {
+                method: 'post',
+                headers: {
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({
+                    newUsername: text.value,
+                }),
+            })
+
+            const responseText = await response.text()
+
+            if (responseText === 'ok') {
+                await fetchUsers()
+            }
+        }
+    */
 </script>
 
 
-<template>  
+<template>
 
     <!--navbar-->
     <div class="min-h-screen flex flex-col bg-background font-sans">
@@ -120,15 +131,36 @@
                 </button>
             </div>
 
-            <RouterLink to="/login">
-
-
+            <!-- ak nie je prihlaseny -->
+            <RouterLink v-if="!userName" to="/login">
                 <button
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/50 border border-text/10 hover:bg-white/80 transition-colors">
+                    <img src="/images/default.webp" class="w-7.5 h-7.5 rounded-full object-cover" />
+                    <span class="text-sm text-text">Log in</span>
+                </button>
+            </RouterLink>
+
+            <!-- ak je prihlaseny -->
+            <div v-else class="relative">
+                <button @click="dropdownOpen = !dropdownOpen"
                     class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/50 border border-text/10 hover:bg-white/80 transition-colors">
                     <img src="/images/default.webp" class="w-7.5 h-7.5 rounded-full object-cover" />
                     <span class="text-sm text-text">{{ userName }}</span>
                 </button>
-            </RouterLink>
+
+                <!-- dropdown -->
+                <div v-show="dropdownOpen"
+                    class="absolute right-0 mt-2 w-44 bg-white border border-text/10 rounded-xl shadow-lg overflow-hidden z-50">
+                    <RouterLink to="/profile" @click="dropdownOpen = false"
+                        class="flex items-center gap-2.5 px-4 py-3 text-sm text-text hover:bg-background transition-colors">
+                        👤 Profil
+                    </RouterLink>
+                    <button @click="logout"
+                        class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-500 hover:bg-background transition-colors">
+                        🚪 Odhlásiť sa
+                    </button>
+                </div>
+            </div>
 
         </nav>
 
@@ -151,8 +183,8 @@
             </aside>
 
             <!-- Page Content -->
-           
+
         </div>
-       
+
     </div>
 </template>
