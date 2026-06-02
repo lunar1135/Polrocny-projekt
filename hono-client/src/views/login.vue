@@ -90,23 +90,17 @@
     const password = ref('')
 
     async function login() {
-        const response = await fetch('http://localhost:3000/login', {
-            method: 'post',
-            headers: {
-                'content-type': 'application/json'
-            },
-            body: JSON.stringify({
-                email: email.value,
-                password: password.value,
-            }),
-        })
+       const response = await fetch('http://localhost:3000/login', {
+  method: 'post',
+  headers: { 'content-type': 'application/json' },
+  credentials: 'include',
+  body: JSON.stringify({ email: email.value, password: password.value }),
+})
 
-        if (response.ok) {
-            const user = await response.json()
-            localStorage.setItem('user', JSON.stringify(user))
-            router.push('/')
-        } else {
-            alert('Nesprávny email alebo heslo')
-        }
+if (response.ok) {
+  const user = await response.json()
+  localStorage.setItem('user', JSON.stringify(user))
+  router.push('/')
+}
     }
 </script>
