@@ -2,14 +2,7 @@
     <div class="min-h-screen flex flex-col bg-background font-sans">
 
         <!-- Navbar -->
-        <nav class="h-[60px] flex items-center px-7 bg-primary shadow-sm">
-            <RouterLink to="/" class="text-acent font-medium hover:opacity-75">
-                <div class="flex items-center gap-2.5">
-                    <img src="/images/logo.png" alt="logo voltix" class="w-9 h-9 rounded-xl bg-acent">
-                    <span class="font-bold text-lg text-text tracking-widest">VOLTIX</span>
-                </div>
-            </RouterLink>
-        </nav>
+        <NavBar />
 
         <!-- Login card -->
         <div class="flex-1 flex items-center justify-center px-4 py-10">
@@ -84,6 +77,7 @@
     import {
         useRouter
     } from 'vue-router'
+    import NavBar from '../components/NavBar.vue'
 
     const router = useRouter()
     const email = ref('')

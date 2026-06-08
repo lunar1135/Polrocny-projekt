@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "@hono/node-server": "^1.19.9",
-    "bcrypt": "^6.0.0"
+    "bcrypt": "^6.0.0",
+    "pinia": "^3.0.4"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0"

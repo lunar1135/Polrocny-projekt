@@ -1,14 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col bg-background">
 
-    <nav class="h-[60px] flex items-center px-7 bg-primary shadow-sm">
-      <RouterLink to="/" class="flex items-center gap-2.5">
-        <div class="rounded-xl bg-acent flex items-center justify-center">
-          <img src="/images/logo.png" alt="logo voltix" class="w-9 h-9">
-        </div>
-        <span class="font-bold text-lg text-text tracking-widest">VOLTIX</span>
-      </RouterLink>
-    </nav>
+    <NavBar />
     
     <div class="max-w-xl mx-auto px-6 py-10">
 
@@ -90,6 +83,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import NavBar from '../components/NavBar.vue'
 
 const router = useRouter()
 const confirmDelete = ref(false)
@@ -103,11 +97,14 @@ const form = ref({
 
 let userId = null
 
-onMounted(() => {
-  const stored = localStorage.getItem('user')
-  if (!stored) return router.push('/login')
+onMounted(async () => {
+  const response = await fetch('http://localhost:3000/me', {
+    credentials: 'include',
+  })
 
-  const user = JSON.parse(stored)
+  if (!response.ok) return router.push('/login')
+
+  const user = await response.json()
   userId = user.id
   form.value.username = user.username
   form.value.email = user.email

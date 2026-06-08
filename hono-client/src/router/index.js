@@ -32,6 +32,16 @@ component: () => import('../views/adminView.vue'),
   path: '/profile',
   name: 'profile',
   component: () => import('../views/ProfileView.vue'),
+},
+{
+  path: '/admin/dashboard',
+  name: 'adminDashboard',
+  component: () => import('../views/AdminDashboard.vue'),
+},
+{
+  path: '/admin/edit/:id',
+  name: 'adminEdit',
+  component: () => import('../views/AdminEditProduct.vue'),
 }
 ],
 })

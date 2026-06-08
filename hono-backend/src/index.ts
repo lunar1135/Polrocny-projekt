@@ -6,20 +6,22 @@ import { sValidator } from '@hono/standard-validator'
 import db from './db-register.js'
 import bcrypt from 'bcrypt'
 import { setCookie, deleteCookie, getCookie } from 'hono/cookie'
+import { authMiddleware, adminMiddleware } from './middleware.js'
+import { createPinia } from 'pinia'
 
-const app = new Hono()
+type Variables = {
+  user: any
+}
+
+const app = new Hono<{ Variables: Variables }>()
 app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true,
+  
 }))
 
 
-
-
-
-
-
-//register
+// register
 const registerSchema = z.object({
   username: z.string().min(1),
   email: z.email(),
@@ -40,14 +42,12 @@ app.post('/register', sValidator('json', registerSchema), async (c) => {
   }
 })
 
-//login
-
+// login
 const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(6),
 })
 
-// login - nastav cookie
 app.post('/login', sValidator('json', loginSchema), async (c) => {
   const body = c.req.valid('json')
 
@@ -60,7 +60,7 @@ app.post('/login', sValidator('json', loginSchema), async (c) => {
   setCookie(c, 'session', String(user.id), {
     httpOnly: true,
     sameSite: 'Lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 dni
+    maxAge: 60 * 60 * 24 * 7,
     path: '/',
   })
 
@@ -74,22 +74,22 @@ app.post('/logout', (c) => {
   return c.text('ok')
 })
 
-// /me - obnov session po refresh
-app.get('/me', (c) => {
-  const sessionId = getCookie(c, 'session')
-  if (!sessionId) return c.text('unauthorized', 401)
-
-  const user = db.prepare('SELECT id, username, email, role, created_at FROM users WHERE id = ?').get(sessionId) as any
-  if (!user) return c.text('unauthorized', 401)
-
-  return c.json(user)
+// /me
+app.get('/me', authMiddleware, (c) => {
+  const user = c.get('user')
+  const { password, ...userWithoutPassword } = user
+  return c.json(userWithoutPassword)
 })
 
+app.get('/admin/users', adminMiddleware, (c) => {
+  const users = db.prepare('SELECT id, username, email, role, created_at FROM users').all()
+  return c.json(users)
+})
 
-//products
+// products
 app.get('/products', (c) => {
   const category = c.req.query('category')
-  
+
   if (category) {
     const products = db.prepare('SELECT * FROM products WHERE category = ?').all(category)
     return c.json(products)
@@ -99,7 +99,6 @@ app.get('/products', (c) => {
   return c.json(products)
 })
 
-
 const productSchema = z.object({
   name: z.string().min(1),
   description: z.string(),
@@ -107,9 +106,10 @@ const productSchema = z.object({
   category: z.string(),
   image: z.string().optional(),
   stock: z.number(),
+  discount: z.number().min(0).max(100).default(0),
 })
 
-app.post('/products', sValidator('json', productSchema), async (c) => {
+app.post('/products', adminMiddleware, sValidator('json', productSchema), async (c) => {
   const body = c.req.valid('json')
 
   db.prepare(`
@@ -129,26 +129,47 @@ app.get('/products/:id', (c) => {
   return c.json(product)
 })
 
-// GET /me - vrati aktualneho usera bez hesla
-app.get('/me', (c) => {
-  const userId = c.req.header('x-user-id')
-  if (!userId) return c.text('unauthorized', 401)
+// PATCH /products/:id - len admin
+app.patch('/products/:id', adminMiddleware, sValidator('json', productSchema.partial()), async (c) => {
+  const id = parseInt(c.req.param('id'))
+  const body = c.req.valid('json')
 
-  const user = db.prepare('SELECT id, username, email, role, created_at FROM users WHERE id = ?').get(userId)
-  if (!user) return c.text('not found', 404)
+  const fields = Object.entries(body)
+    .map(([key]) => `${key} = ?`)
+    .join(', ')
+  const values = [...Object.values(body), id]
 
-  return c.json(user)
+  db.prepare(`UPDATE products SET ${fields} WHERE id = ?`).run(...values)
+
+  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id)
+  return c.json(product)
 })
 
-// PATCH /users/:id - uprav udaje
+// DELETE /products/:id - len admin
+app.delete('/products/:id', adminMiddleware, (c) => {
+  const id = parseInt(c.req.param('id'))
+  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id)
+  if (!product) return c.text('not found', 404)
+
+  db.prepare('DELETE FROM products WHERE id = ?').run(id)
+  return c.text('ok')
+})
+
+
+// PATCH /users/:id
 const updateUserSchema = z.object({
   username: z.string().min(1).optional(),
   email: z.email().optional(),
 })
 
-app.patch('/users/:id', sValidator('json', updateUserSchema), async (c) => {
+app.patch('/users/:id', authMiddleware, sValidator('json', updateUserSchema), async (c) => {
   const id = parseInt(c.req.param('id'))
+  const currentUser = c.get('user')
   const body = c.req.valid('json')
+
+  if (currentUser.id !== id && currentUser.role !== 'admin') {
+    return c.text('forbidden', 403)
+  }
 
   if (body.username) {
     db.prepare('UPDATE users SET username = ? WHERE id = ?').run(body.username, id)
@@ -161,18 +182,32 @@ app.patch('/users/:id', sValidator('json', updateUserSchema), async (c) => {
   return c.json(user)
 })
 
-// DELETE /users/:id - zmaz usera
-app.delete('/users/:id', (c) => {
+app.delete('/users/:id', authMiddleware, (c) => {
+  const id = parseInt(c.req.param('id'))
+  const currentUser = c.get('user')
+
+  if (currentUser.id !== id && currentUser.role !== 'admin') {
+    return c.text('forbidden', 403)
+  }
+
+  db.prepare('DELETE FROM users WHERE id = ?').run(id)
+  return c.text('ok')
+})
+
+app.delete('/admin/users/:id', adminMiddleware, (c) => {
   const id = parseInt(c.req.param('id'))
   db.prepare('DELETE FROM users WHERE id = ?').run(id)
   return c.text('ok')
 })
 
+// zmena role - len admin
+app.patch('/admin/users/:id/role', adminMiddleware, async (c) => {
+  const id = parseInt(c.req.param('id'))
+  const { role } = await c.req.json()
 
-
-
-
-
+  db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, id)
+  return c.text('ok')
+})
 
 serve(
   {

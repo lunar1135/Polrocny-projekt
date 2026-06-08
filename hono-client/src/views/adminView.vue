@@ -1,4 +1,6 @@
 <template>
+<NavBar />
+
   <div class="min-h-screen bg-background">
     <div class="max-w-2xl mx-auto px-6 py-10">
       
@@ -68,6 +70,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import NavBar from '../components/NavBar.vue'
 
 const router = useRouter()
 const error = ref('')
