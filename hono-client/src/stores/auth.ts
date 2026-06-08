@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null as any)
 
@@ -19,5 +20,9 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
   }
 
-  return { user, fetchMe, logout }
+  function setUser(newUser: any) {
+    user.value = newUser
+  }
+
+  return { user, fetchMe, logout, setUser }
 })

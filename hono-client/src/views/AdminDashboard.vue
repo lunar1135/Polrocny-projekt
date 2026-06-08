@@ -3,8 +3,13 @@
 
     <NavBar />
 
+<div v-if="loading" class="flex items-center justify-center py-16">
+  <div class="w-8 h-8 border-4 border-acent border-t-transparent rounded-full animate-spin"></div>
+</div>
+
     <div class="max-w-4xl mx-auto w-full px-6 py-10">
       <h1 class="text-2xl font-bold text-text mb-8">Správa používateľov</h1>
+
 
       <div class="bg-white border border-text/8 rounded-2xl overflow-hidden">
         <table class="w-full">
@@ -69,6 +74,7 @@ import NavBar from '../components/NavBar.vue'
 const router = useRouter()
 const users = ref([])
 const currentUserId = ref(null)
+const loading = ref(true)
 
 onMounted(async () => {
   const me = await fetch('http://localhost:3000/me', { credentials: 'include' })
@@ -82,10 +88,12 @@ onMounted(async () => {
 })
 
 async function fetchUsers() {
+  loading.value = true
   const response = await fetch('http://localhost:3000/admin/users', {
     credentials: 'include',
   })
   users.value = await response.json()
+  loading.value = false
 }
 
 async function deleteUser(id) {

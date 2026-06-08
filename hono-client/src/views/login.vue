@@ -44,6 +44,8 @@
                         </a>
                     </div>
 
+                    <p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
+                    
                     <button @click="login"
                         class="w-full h-[46px] bg-acent hover:bg-acent/80 active:scale-[0.98] text-white text-sm font-medium rounded-xl transition-all">
                         Prihlásiť sa
@@ -71,30 +73,39 @@
 </template>
 
 <script setup>
-    import {
-        ref
-    } from 'vue'
-    import {
-        useRouter
-    } from 'vue-router'
-    import NavBar from '../components/NavBar.vue'
+    import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import NavBar from '../components/NavBar.vue'
 
-    const router = useRouter()
-    const email = ref('')
-    const password = ref('')
+const router = useRouter()
+const auth = useAuthStore()
+const email = ref('')
+const password = ref('')
+const error = ref('')
 
-    async function login() {
-       const response = await fetch('http://localhost:3000/login', {
-  method: 'post',
-  headers: { 'content-type': 'application/json' },
-  credentials: 'include',
-  body: JSON.stringify({ email: email.value, password: password.value }),
-})
+async function login() {
+  error.value = ''
 
-if (response.ok) {
-  const user = await response.json()
-  localStorage.setItem('user', JSON.stringify(user))
-  router.push('/')
+  if (!email.value || !password.value) {
+    error.value = 'Vyplňte email a heslo'
+    return
+  }
+
+  const response = await fetch('http://localhost:3000/login', {
+    method: 'post',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ email: email.value, password: password.value }),
+  })
+
+  if (response.ok) {
+    await auth.fetchMe()
+    router.push('/')
+  } else if (response.status === 401) {
+    error.value = 'Nesprávny email alebo heslo'
+  } else {
+    error.value = 'Nastala chyba, skúste znova'
+  }
 }
-    }
 </script>
