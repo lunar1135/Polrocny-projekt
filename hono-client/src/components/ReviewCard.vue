@@ -2,23 +2,33 @@
   <div class="bg-white border border-text/8 rounded-2xl p-6 space-y-4">
 
     <!-- Header -->
-    <div class="flex items-center gap-3">
-  <RouterLink v-if="review.user_id" :to="`/user/${review.user_id}`">
-    <div class="w-8 h-8 rounded-full bg-acent/10 flex items-center justify-center text-acent text-sm font-medium overflow-hidden">
-      <img v-if="review.avatar" 
-        :src="`http://localhost:3000/files/${review.avatar}`" 
-        class="w-full h-full object-cover" />
-      <span v-else>{{ review.username?.charAt(0).toUpperCase() }}</span>
+    <div class="flex items-start justify-between">
+      <div class="flex items-center gap-3">
+        <RouterLink v-if="review.user_id" :to="`/user/${review.user_id}`">
+          <div class="w-8 h-8 rounded-full bg-acent/10 flex items-center justify-center text-acent text-sm font-medium overflow-hidden">
+            <img v-if="review.avatar"
+              :src="`http://localhost:3000/files/${review.avatar}`"
+              class="w-full h-full object-cover" />
+            <span v-else>{{ review.username?.charAt(0).toUpperCase() }}</span>
+          </div>
+        </RouterLink>
+        <div v-else class="w-8 h-8 rounded-full bg-acent/10 flex items-center justify-center text-acent text-sm font-medium">
+          {{ review.username?.charAt(0).toUpperCase() }}
+        </div>
+        <div>
+          <p class="text-sm font-medium text-text">{{ review.username }}</p>
+          <p class="text-xs text-text/40">{{ formatDate(review.created_at) }}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-sm">{{ '⭐'.repeat(review.rating) }}</span>
+        <button v-if="canDelete"
+          @click="$emit('delete', review.id)"
+          class="text-xs text-red-400 hover:text-red-600 transition-colors">
+          🗑️
+        </button>
+      </div>
     </div>
-  </RouterLink>
-  <div v-else class="w-8 h-8 rounded-full bg-acent/10 flex items-center justify-center text-acent text-sm font-medium">
-    {{ review.username?.charAt(0).toUpperCase() }}
-  </div>
-  <div>
-    <p class="text-sm font-medium text-text">{{ review.username }}</p>
-    <p class="text-xs text-text/40">{{ formatDate(review.created_at) }}</p>
-  </div>
-</div>
 
     <p class="text-sm text-text/70">{{ review.content }}</p>
 
