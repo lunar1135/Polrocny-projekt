@@ -65,8 +65,10 @@
                         class="w-full h-[46px] bg-acent hover:bg-acent/80 active:scale-[0.98] text-white text-sm font-medium rounded-xl transition-all">
                         Zaregistrovať sa
                     </button>
-                </div>
 
+                    
+                </div>
+<p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
                 <p class="text-center text-sm text-text/40 mt-6">
                     Už máte účet?
                     <RouterLink to="/login" class="text-acent font-medium hover:opacity-75">
@@ -93,11 +95,33 @@
     const email = ref('')
     const password = ref('')
     const passwordConfirm = ref('')
+    const error = ref('')
 
 
-    async function register() {
+    function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+async function register() {
+  error.value = ''
+
+  if (!name.value || !email.value || !password.value || !passwordConfirm.value) {
+    error.value = 'Vyplňte všetky polia'
+    return
+  }
+
+  if (!isValidEmail(email.value)) {
+    error.value = 'Zadajte platný email (napr. meno@domena.sk)'
+    return
+  }
+
   if (password.value !== passwordConfirm.value) {
-    alert('Heslá sa nezhodujú')
+    error.value = 'Heslá sa nezhodujú'
+    return
+  }
+
+  if (password.value.length < 6) {
+    error.value = 'Heslo musí mať aspoň 6 znakov'
     return
   }
 
@@ -113,10 +137,13 @@
 
   if (response.ok) {
     router.push('/login')
+  } else if (response.status === 409) {
+    error.value = 'Tento email je už zaregistrovaný'
   } else {
-    alert('Tento email už existuje')
+    error.value = 'Nastala chyba, skúste znova'
   }
 }
+
 </script>
 
  
